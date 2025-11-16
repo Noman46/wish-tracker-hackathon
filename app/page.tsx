@@ -6,6 +6,8 @@ import { Category } from '@/lib/models/category';
 import { WishItem } from '@/lib/models/wish-item';
 import CategoryManager from '@/components/CategoryManager';
 import WishItemManager from '@/components/WishItemManager';
+import Logo from '@/components/Logo';
+import AuthButton from '@/components/AuthButton';
 import { List, Grid } from 'lucide-react';
 
 export default function Home() {
@@ -78,7 +80,7 @@ export default function Home() {
       {/* Header */}
       <header className="bg-white border-b border-gray-200">
         <div className="flex justify-between items-center px-6 py-4">
-          <h1 className="text-2xl font-bold text-blue-900">WISH TRACKER</h1>
+          <Logo />
           {session?.user?.image ? (
             <img
               src={session.user.image}
@@ -91,28 +93,54 @@ export default function Home() {
         </div>
       </header>
 
-      <div className="flex">
+      {/* Outer Content Layout */}
+      <div 
+        className="flex mx-auto"
+        style={{
+          maxWidth: '1440px',
+          gap: '30px',
+          paddingTop: '20px',
+          paddingRight: '120px',
+          paddingLeft: '120px'
+        }}
+      >
         {/* Sidebar Navigation */}
-        <aside className="w-64 bg-gray-100 min-h-[calc(100vh-73px)] border-r border-gray-200">
-          <nav className="p-4 space-y-2">
+        <aside className="bg-gray-100 min-h-[calc(100vh-73px)] border-r border-gray-200">
+          <nav className="p-4" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <button
               onClick={() => setActiveTab('wishes')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+              className={`flex items-center gap-3 px-4 transition-colors ${
                 activeTab === 'wishes'
                   ? 'bg-gray-200 text-gray-900'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
+              style={{
+                width: '220px',
+                height: '82px',
+                borderRadius: '8px',
+                borderWidth: '1px',
+                borderStyle: 'solid',
+                borderColor: activeTab === 'wishes' ? 'transparent' : '#e5e7eb'
+              }}
             >
               <List className="w-5 h-5" />
               <span className="font-medium">Wish List</span>
             </button>
             <button
               onClick={() => setActiveTab('categories')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+              className={`flex items-center gap-3 px-4 transition-colors ${
                 activeTab === 'categories'
                   ? 'bg-gray-200 text-gray-900'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
+              style={{
+                width: '220px',
+                height: '82px',
+                borderRadius: '8px',
+                borderWidth: '1px',
+                borderStyle: 'solid',
+                borderColor: activeTab === 'categories' ? 'transparent' : '#e5e7eb'
+              }}
             >
               <Grid className="w-5 h-5" />
               <span className="font-medium">Categories</span>
@@ -120,8 +148,16 @@ export default function Home() {
           </nav>
         </aside>
 
-        {/* Main Content */}
-        <main className="flex-1 bg-white">
+        {/* Main Content - Body Content */}
+        <main 
+          className="bg-white"
+          style={{
+            width: '950px',
+            gap: '10px',
+            display: 'flex',
+            flexDirection: 'column'
+          }}
+        >
           {activeTab === 'wishes' ? (
             <WishItemManager
               wishItems={wishItems}
