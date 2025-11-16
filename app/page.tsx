@@ -79,33 +79,62 @@ export default function Home() {
 
       {/* Header */}
       <header className="bg-white border-b border-gray-200">
-        <div className="flex justify-between items-center px-6 py-4">
+        <div className="flex justify-between items-center px-4 sm:px-6 py-4">
           <Logo />
           {session?.user?.image ? (
             <img
               src={session.user.image}
               alt={session.user.name || 'User'}
-              className="w-10 h-10 rounded-full"
+              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full"
             />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-gray-300"></div>
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-300"></div>
           )}
         </div>
       </header>
 
+      {/* Mobile Navigation Tabs */}
+      <div className="lg:hidden bg-gray-100 border-b border-gray-200">
+        <nav className="flex">
+          <button
+            onClick={() => setActiveTab('wishes')}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 transition-colors ${
+              activeTab === 'wishes'
+                ? 'bg-gray-200 text-gray-900 border-b-2 border-gray-900'
+                : 'text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            <List className="w-5 h-5" />
+            <span className="font-medium">Wish List</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('categories')}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 transition-colors ${
+              activeTab === 'categories'
+                ? 'bg-gray-200 text-gray-900 border-b-2 border-gray-900'
+                : 'text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            <Grid className="w-5 h-5" />
+            <span className="font-medium">Categories</span>
+          </button>
+        </nav>
+      </div>
+
       {/* Outer Content Layout */}
       <div 
-        className="flex mx-auto"
+        className="flex flex-col lg:flex-row mx-auto w-full"
         style={{
           maxWidth: '1440px',
           gap: '30px',
           paddingTop: '20px',
-          paddingRight: '120px',
-          paddingLeft: '120px'
+          paddingRight: 'clamp(16px, 8.33vw, 120px)',
+          paddingLeft: 'clamp(16px, 8.33vw, 120px)',
+          paddingBottom: '20px'
         }}
       >
-        {/* Sidebar Navigation */}
-        <aside className="bg-gray-100 min-h-[calc(100vh-73px)] border-r border-gray-200">
+        {/* Sidebar Navigation - Hidden on mobile, visible on lg+ */}
+        <aside className="hidden lg:block bg-gray-100 min-h-[calc(100vh-73px)] border-r border-gray-200 flex-shrink-0">
           <nav className="p-4" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <button
               onClick={() => setActiveTab('wishes')}
@@ -150,9 +179,9 @@ export default function Home() {
 
         {/* Main Content - Body Content */}
         <main 
-          className="bg-white"
+          className="bg-white w-full"
           style={{
-            width: '950px',
+            maxWidth: '950px',
             gap: '10px',
             display: 'flex',
             flexDirection: 'column'

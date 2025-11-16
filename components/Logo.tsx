@@ -1,14 +1,14 @@
 export default function Logo() {
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-2 sm:gap-3">
       {/* Star Logo with circle and plus */}
       <svg
-        width="36"
-        height="36"
+        width="28"
+        height="28"
         viewBox="0 0 36 36"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="flex-shrink-0"
+        className="flex-shrink-0 sm:w-9 sm:h-9"
       >
         {/* Four-pointed star outline */}
         <path
@@ -29,7 +29,7 @@ export default function Logo() {
       {/* Text Logo */}
       <div className="flex items-baseline">
         <span 
-          className="text-2xl text-blue-600 tracking-tight" 
+          className="text-lg sm:text-2xl text-blue-600 tracking-tight" 
           style={{ 
             fontFamily: 'Georgia, "Times New Roman", serif',
             fontWeight: 400,
@@ -39,7 +39,7 @@ export default function Logo() {
           WISH
         </span>
         <span 
-          className="text-2xl text-blue-600 tracking-tight ml-1" 
+          className="text-lg sm:text-2xl text-blue-600 tracking-tight ml-1" 
           style={{ 
             fontFamily: 'Georgia, "Times New Roman", serif',
             fontWeight: 700,

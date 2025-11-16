@@ -177,20 +177,16 @@ export default function WishItemManager({ wishItems, categories, onUpdate }: Wis
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }} className="w-full">
       {/* Page Title */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Wish List</h1>
-        <p className="text-gray-600">Track your wishes from idea to achievement</p>
+      <div className="mb-4 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Wish List</h1>
+        <p className="text-sm sm:text-base text-gray-600">Track your wishes from idea to achievement</p>
       </div>
 
       {/* Search, Category Filter, and Add Button */}
       <div 
-        className="grid gap-4 mb-6" 
-        style={{ 
-          gridTemplateColumns: '50% 25% 25%',
-          width: '950px'
-        }}
+        className="grid grid-cols-1 sm:grid-cols-[2fr_1fr_1fr] gap-4 mb-6 w-full"
       >
         <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -199,7 +195,7 @@ export default function WishItemManager({ wishItems, categories, onUpdate }: Wis
             placeholder="Search by title..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
             style={{ height: '40px' }}
           />
         </div>
@@ -210,7 +206,7 @@ export default function WishItemManager({ wishItems, categories, onUpdate }: Wis
               e.target.value === 'all' ? 'all' : parseInt(e.target.value)
             )
           }
-          className="w-full px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+          className="w-full px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
           style={{ height: '40px' }}
         >
           <option value="all">All Categories</option>
@@ -226,23 +222,27 @@ export default function WishItemManager({ wishItems, categories, onUpdate }: Wis
           style={{ height: '40px' }}
         >
           <Plus className="w-5 h-5" />
-          Add New Wish
+          <span className="hidden sm:inline">Add New Wish</span>
+          <span className="sm:hidden">Add</span>
         </button>
       </div>
 
       {/* Status Tabs */}
-      <div className="flex mb-6" style={{ gap: '6px' }}>
+      <div className="flex flex-wrap gap-2 sm:gap-1 mb-6">
         {Object.entries(statusConfig).map(([status, config]) => (
           <button
             key={status}
             onClick={() => setFilterStatus(status as WishStatus)}
-            className={`font-medium text-sm transition-colors ${
+            className={`font-medium text-xs sm:text-sm transition-colors flex items-center justify-center ${
               filterStatus === status
                 ? 'text-gray-900'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
             style={{
-              width: '314px',
+              minWidth: '100px',
+              width: 'auto',
+              flex: '1 1 auto',
+              maxWidth: '314px',
               height: '28px',
               gap: '6px',
               paddingTop: '3px',
@@ -252,10 +252,7 @@ export default function WishItemManager({ wishItems, categories, onUpdate }: Wis
               borderRadius: '14px',
               borderWidth: '1px',
               borderStyle: 'solid',
-              borderColor: filterStatus === status ? '#374151' : '#e5e7eb',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
+              borderColor: filterStatus === status ? '#374151' : '#e5e7eb'
             }}
           >
             {config.label}
@@ -274,10 +271,9 @@ export default function WishItemManager({ wishItems, categories, onUpdate }: Wis
           return (
             <div
               key={item.id}
-              className="bg-white hover:shadow-md transition-shadow"
+              className="bg-white hover:shadow-md transition-shadow w-full"
               style={{
-                width: '950px',
-                height: '136px',
+                minHeight: '136px',
                 gap: '16px',
                 borderRadius: '8px',
                 borderWidth: '1px',
@@ -328,13 +324,13 @@ export default function WishItemManager({ wishItems, categories, onUpdate }: Wis
                 )}
 
                 {/* Footer: Remarks on left, Move to button and Delete on right */}
-                <div className="flex items-center justify-between" style={{ marginTop: 'auto' }}>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3" style={{ marginTop: 'auto' }}>
                   {/* Left: Remarks Button */}
                   <div>
                     {item.remarks && (
                       <button
                         onClick={() => setExpandedRemarks(isRemarksExpanded ? null : item.id)}
-                        className="flex items-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                        className="flex items-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-xs sm:text-sm"
                       >
                         <MessageSquare className="w-4 h-4" />
                         <span>Remarks ({remarksCount})</span>
@@ -344,46 +340,50 @@ export default function WishItemManager({ wishItems, categories, onUpdate }: Wis
                   </div>
 
                   {/* Right: Move to Button and Delete Icon */}
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                     {item.status === 'wish' && (
                       <button
                         onClick={() => handleStatusChange(item.id, 'in_progress')}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                        className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm"
                       >
-                        Move to In Progress
-                        <ArrowUpRight className="w-4 h-4" />
+                        <span className="hidden sm:inline">Move to In Progress</span>
+                        <span className="sm:hidden">In Progress</span>
+                        <ArrowUpRight className="w-3 h-3 sm:w-4 sm:h-4" />
                       </button>
                     )}
                     {item.status === 'in_progress' && (
                       <button
                         onClick={() => handleStatusChange(item.id, 'wish')}
-                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm"
+                        className="px-3 sm:px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-xs sm:text-sm"
                       >
-                        Move to Wish
+                        <span className="hidden sm:inline">Move to Wish</span>
+                        <span className="sm:hidden">Wish</span>
                       </button>
                     )}
                     {item.status === 'achieved' && (
                       <button
                         onClick={() => handleStatusChange(item.id, 'in_progress')}
-                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm"
+                        className="px-3 sm:px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-xs sm:text-sm"
                       >
-                        Move to In Progress
+                        <span className="hidden sm:inline">Move to In Progress</span>
+                        <span className="sm:hidden">In Progress</span>
                       </button>
                     )}
                     {item.status === 'in_progress' && (
                       <button
                         onClick={() => handleStatusChange(item.id, 'achieved')}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                        className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm"
                       >
-                        Mark as Achieved
-                        <ArrowUpRight className="w-4 h-4" />
+                        <span className="hidden sm:inline">Mark as Achieved</span>
+                        <span className="sm:hidden">Achieved</span>
+                        <ArrowUpRight className="w-3 h-3 sm:w-4 sm:h-4" />
                       </button>
                     )}
                     <button
                       onClick={() => handleDelete(item.id)}
                       className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
                     >
-                      <Trash2 className="w-5 h-5" />
+                      <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
                   </div>
                 </div>
@@ -405,7 +405,7 @@ export default function WishItemManager({ wishItems, categories, onUpdate }: Wis
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-semibold">
                 {editingItem ? 'Edit Wish Item' : 'Create Wish Item'}
@@ -427,7 +427,7 @@ export default function WishItemManager({ wishItems, categories, onUpdate }: Wis
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                   required
                 />
               </div>
@@ -439,12 +439,12 @@ export default function WishItemManager({ wishItems, categories, onUpdate }: Wis
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                   rows={3}
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Status
@@ -452,7 +452,7 @@ export default function WishItemManager({ wishItems, categories, onUpdate }: Wis
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value as WishStatus })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                   >
                     <option value="wish">Wish</option>
                     <option value="in_progress">In Progress</option>
@@ -472,7 +472,7 @@ export default function WishItemManager({ wishItems, categories, onUpdate }: Wis
                         category_id: e.target.value ? parseInt(e.target.value) : null,
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                   >
                     <option value="">None</option>
                     {categories.map((cat) => (
@@ -491,7 +491,7 @@ export default function WishItemManager({ wishItems, categories, onUpdate }: Wis
                 <textarea
                   value={formData.remarks}
                   onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                   rows={2}
                   placeholder="Add any notes or remarks..."
                 />
