@@ -33,10 +33,23 @@ export function initDatabase() {
     )
   `);
 
+  // Remarks table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS remarks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      wish_item_id INTEGER NOT NULL,
+      content TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (wish_item_id) REFERENCES wish_items(id) ON DELETE CASCADE
+    )
+  `);
+
   // Create indexes for better performance
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_wish_items_status ON wish_items(status);
     CREATE INDEX IF NOT EXISTS idx_wish_items_category ON wish_items(category_id);
+    CREATE INDEX IF NOT EXISTS idx_remarks_wish_item ON remarks(wish_item_id);
   `);
 }
 

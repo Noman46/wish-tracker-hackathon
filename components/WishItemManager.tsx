@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { WishItem, WishStatus } from '@/lib/models/wish-item';
 import { Category } from '@/lib/models/category';
-import { Plus, Trash2, X, CheckCircle2, Circle, Clock, Search, MessageSquare, ChevronDown, ArrowUpRight } from 'lucide-react';
+import { Remark } from '@/lib/models/remark';
+import { Plus, Trash2, X, CheckCircle2, Circle, Clock, Search, MessageSquare, ChevronDown, ArrowUpRight, Edit2 } from 'lucide-react';
 
 interface WishItemManagerProps {
   wishItems: WishItem[];
@@ -24,12 +25,14 @@ export default function WishItemManager({ wishItems, categories, onUpdate }: Wis
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState<number | 'all'>('all');
   const [expandedRemarks, setExpandedRemarks] = useState<number | null>(null);
+  const [remarks, setRemarks] = useState<Record<number, Remark[]>>({});
+  const [editingRemark, setEditingRemark] = useState<{ id: number; content: string } | null>(null);
+  const [newRemarkContent, setNewRemarkContent] = useState<Record<number, string>>({});
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     status: 'wish' as WishStatus,
     category_id: null as number | null,
-    remarks: '',
   });
 
   const filteredItems = useMemo(() => {
@@ -54,10 +57,101 @@ export default function WishItemManager({ wishItems, categories, onUpdate }: Wis
     return filtered;
   }, [wishItems, filterStatus, filterCategory, searchQuery]);
 
-  const getRemarksCount = (remarks: string | null): number => {
-    if (!remarks) return 0;
-    // Count lines or split by newlines
-    return remarks.split('\n').filter(line => line.trim().length > 0).length;
+  // Fetch remarks for all wish items
+  useEffect(() => {
+    const fetchRemarks = async () => {
+      const remarksMap: Record<number, Remark[]> = {};
+      for (const item of wishItems) {
+        try {
+          const response = await fetch(`/api/wish-items/${item.id}/remarks`);
+          if (response.ok) {
+            remarksMap[item.id] = await response.json();
+          }
+        } catch (error) {
+          console.error(`Failed to fetch remarks for item ${item.id}:`, error);
+        }
+      }
+      setRemarks(remarksMap);
+    };
+    fetchRemarks();
+  }, [wishItems]);
+
+  const getRemarksCount = (wishItemId: number): number => {
+    return remarks[wishItemId]?.length || 0;
+  };
+
+  const handleAddRemark = async (wishItemId: number) => {
+    const content = newRemarkContent[wishItemId]?.trim();
+    if (!content) return;
+
+    try {
+      const response = await fetch(`/api/wish-items/${wishItemId}/remarks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content }),
+      });
+
+      if (response.ok) {
+        const newRemark = await response.json();
+        setRemarks(prev => ({
+          ...prev,
+          [wishItemId]: [newRemark, ...(prev[wishItemId] || [])],
+        }));
+        setNewRemarkContent(prev => ({ ...prev, [wishItemId]: '' }));
+      } else {
+        alert('Failed to add remark');
+      }
+    } catch (error) {
+      console.error('Error adding remark:', error);
+      alert('Failed to add remark');
+    }
+  };
+
+  const handleUpdateRemark = async (remarkId: number, content: string) => {
+    try {
+      const response = await fetch(`/api/remarks/${remarkId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content }),
+      });
+
+      if (response.ok) {
+        const updatedRemark = await response.json();
+        const wishItemId = updatedRemark.wish_item_id;
+        setRemarks(prev => ({
+          ...prev,
+          [wishItemId]: prev[wishItemId]?.map(r => r.id === remarkId ? updatedRemark : r) || [],
+        }));
+        setEditingRemark(null);
+      } else {
+        alert('Failed to update remark');
+      }
+    } catch (error) {
+      console.error('Error updating remark:', error);
+      alert('Failed to update remark');
+    }
+  };
+
+  const handleDeleteRemark = async (remarkId: number, wishItemId: number) => {
+    if (!confirm('Are you sure you want to delete this remark?')) return;
+
+    try {
+      const response = await fetch(`/api/remarks/${remarkId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setRemarks(prev => ({
+          ...prev,
+          [wishItemId]: prev[wishItemId]?.filter(r => r.id !== remarkId) || [],
+        }));
+      } else {
+        alert('Failed to delete remark');
+      }
+    } catch (error) {
+      console.error('Error deleting remark:', error);
+      alert('Failed to delete remark');
+    }
   };
 
   const formatDate = (dateString: string): string => {
@@ -72,7 +166,6 @@ export default function WishItemManager({ wishItems, categories, onUpdate }: Wis
       description: '',
       status: 'wish',
       category_id: null,
-      remarks: '',
     });
     setIsModalOpen(true);
   };
@@ -84,7 +177,6 @@ export default function WishItemManager({ wishItems, categories, onUpdate }: Wis
       description: item.description || '',
       status: item.status,
       category_id: item.category_id,
-      remarks: item.remarks || '',
     });
     setIsModalOpen(true);
   };
@@ -97,7 +189,6 @@ export default function WishItemManager({ wishItems, categories, onUpdate }: Wis
       description: '',
       status: 'wish',
       category_id: null,
-      remarks: '',
     });
   };
 
@@ -113,6 +204,8 @@ export default function WishItemManager({ wishItems, categories, onUpdate }: Wis
         ...formData,
         category_id: formData.category_id || null,
       };
+      
+      // Remove remarks from payload as it's now handled separately
 
       const response = await fetch(url, {
         method,
@@ -121,7 +214,16 @@ export default function WishItemManager({ wishItems, categories, onUpdate }: Wis
       });
 
       if (response.ok) {
+        const updatedItem = await response.json();
         onUpdate();
+        // Refresh remarks after creating/updating wish item
+        if (updatedItem.id) {
+          const remarksResponse = await fetch(`/api/wish-items/${updatedItem.id}/remarks`);
+          if (remarksResponse.ok) {
+            const itemRemarks = await remarksResponse.json();
+            setRemarks(prev => ({ ...prev, [updatedItem.id]: itemRemarks }));
+          }
+        }
         closeModal();
       } else {
         const error = await response.json();
@@ -265,8 +367,9 @@ export default function WishItemManager({ wishItems, categories, onUpdate }: Wis
         {filteredItems.map((item) => {
           const category = getCategory(item.category_id);
           const statusInfo = statusConfig[item.status];
-          const remarksCount = getRemarksCount(item.remarks);
+          const remarksCount = getRemarksCount(item.id);
           const isRemarksExpanded = expandedRemarks === item.id;
+          const itemRemarks = remarks[item.id] || [];
 
           return (
             <div
@@ -315,11 +418,78 @@ export default function WishItemManager({ wishItems, categories, onUpdate }: Wis
                 </div>
 
                 {/* Expanded Remarks Section */}
-                {isRemarksExpanded && item.remarks && (
-                  <div className="p-3 bg-gray-50 rounded text-sm text-gray-700">
-                    {item.remarks.split('\n').map((line, idx) => (
-                      <p key={idx}>{line}</p>
-                    ))}
+                {isRemarksExpanded && (
+                  <div className="p-3 bg-gray-50 rounded space-y-3">
+                    {/* Add New Remark */}
+                    <div className="space-y-2">
+                      <textarea
+                        value={newRemarkContent[item.id] || ''}
+                        onChange={(e) => setNewRemarkContent(prev => ({ ...prev, [item.id]: e.target.value }))}
+                        placeholder="Add a new remark..."
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 text-sm"
+                        rows={2}
+                      />
+                      <button
+                        onClick={() => handleAddRemark(item.id)}
+                        className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                      >
+                        Add Remark
+                      </button>
+                    </div>
+
+                    {/* List of Remarks */}
+                    {itemRemarks.length > 0 ? (
+                      <div className="space-y-2">
+                        {itemRemarks.map((remark) => (
+                          <div key={remark.id} className="bg-white p-3 rounded border border-gray-200">
+                            {editingRemark?.id === remark.id ? (
+                              <div className="space-y-2">
+                                <textarea
+                                  value={editingRemark.content}
+                                  onChange={(e) => setEditingRemark({ ...editingRemark, content: e.target.value })}
+                                  className="w-full px-2 py-1 border border-gray-300 rounded text-gray-900 text-sm"
+                                  rows={2}
+                                />
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => handleUpdateRemark(remark.id, editingRemark.content)}
+                                    className="px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700"
+                                  >
+                                    Save
+                                  </button>
+                                  <button
+                                    onClick={() => setEditingRemark(null)}
+                                    className="px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs hover:bg-gray-300"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex items-start justify-between gap-2">
+                                <p className="text-sm text-gray-700 flex-1">{remark.content}</p>
+                                <div className="flex gap-1">
+                                  <button
+                                    onClick={() => setEditingRemark({ id: remark.id, content: remark.content })}
+                                    className="p-1 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                  >
+                                    <Edit2 className="w-3 h-3" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteRemark(remark.id, item.id)}
+                                    className="p-1 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500">No remarks yet. Add your first remark above.</p>
+                    )}
                   </div>
                 )}
 
@@ -327,16 +497,14 @@ export default function WishItemManager({ wishItems, categories, onUpdate }: Wis
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3" style={{ marginTop: 'auto' }}>
                   {/* Left: Remarks Button */}
                   <div>
-                    {item.remarks && (
-                      <button
-                        onClick={() => setExpandedRemarks(isRemarksExpanded ? null : item.id)}
-                        className="flex items-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-xs sm:text-sm"
-                      >
-                        <MessageSquare className="w-4 h-4" />
-                        <span>Remarks ({remarksCount})</span>
-                        <ChevronDown className={`w-4 h-4 transition-transform ${isRemarksExpanded ? 'rotate-180' : ''}`} />
-                      </button>
-                    )}
+                    <button
+                      onClick={() => setExpandedRemarks(isRemarksExpanded ? null : item.id)}
+                      className="flex items-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-xs sm:text-sm"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      <span>Remarks ({remarksCount})</span>
+                      <ChevronDown className={`w-4 h-4 transition-transform ${isRemarksExpanded ? 'rotate-180' : ''}`} />
+                    </button>
                   </div>
 
                   {/* Right: Move to Button and Delete Icon */}
@@ -482,19 +650,6 @@ export default function WishItemManager({ wishItems, categories, onUpdate }: Wis
                     ))}
                   </select>
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Remarks
-                </label>
-                <textarea
-                  value={formData.remarks}
-                  onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                  rows={2}
-                  placeholder="Add any notes or remarks..."
-                />
               </div>
 
               <div className="flex gap-3 pt-4">
